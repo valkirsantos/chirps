@@ -12,7 +12,7 @@ class ChirpController extends Controller
      */
     public function index()
     {
-        $chirps = Chirp::with('user')
+        $chirps = Chirp::with('user') //Chirp::all();
         ->latest()//ordem de lançamento
         ->take(50)//queremos pegar 50 deles
         ->get();//E então vamos ouvir aqueles chilreios.
@@ -33,7 +33,22 @@ class ChirpController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        // Valide a solicitação
+        $validated = $request->validate([
+            'message' => 'required|string|max:255',
+        ], [
+            'message.required' => 'Por favor, escreva algo para gorjear!',
+            'message.max' => 'Os chilreios devem ter 255 caracteres ou menos.',
+        ]);
+        
+        // Crie o chirp (nenhum usuário por enquanto - adicionaremos autenticação mais tarde)
+        \App\Models\Chirp::create([
+            'message' => $validated['message'],
+            'user_id' => null, // Adicionaremos autenticação na lição 11
+        ]);
+        
+        // Redirecionar de volta para o feed
+        return redirect('/')->with('success', 'Chirp criado!');
     }
 
     /**
