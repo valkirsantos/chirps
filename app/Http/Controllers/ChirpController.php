@@ -1,12 +1,13 @@
 <?php
 
 namespace App\Http\Controllers;
-
 use App\Models\Chirp;
 use Illuminate\Http\Request;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class ChirpController extends Controller
 {
+    use AuthorizesRequests;
     /**
      * Display a listing of the resource.
      */
@@ -41,11 +42,17 @@ class ChirpController extends Controller
             'message.max' => 'Os chilreios devem ter 255 caracteres ou menos.',
         ]);
         
+        /*
         // Crie o chirp (nenhum usuário por enquanto - adicionaremos autenticação mais tarde)
         \App\Models\Chirp::create([
             'message' => $validated['message'],
             'user_id' => null, // Adicionaremos autenticação na lição 11
         ]);
+        */
+
+        // Use the authenticated user
+        auth()->user()->chirps()->create($validated);
+
         
         // Redirecionar de volta para o feed
         return redirect('/')->with('success', 'Chirp criado!');
@@ -62,35 +69,39 @@ class ChirpController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Chirp $chirp)
-    {
-        // We'll add authorization in lesson 11
+    public function edit(Chirp $chirp) { 
+        
+        $this->authorize('update', $chirp);
+
         return view('chirps.edit', compact('chirp'));
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Chirp $chirp)
-    {
-        //$this->authorize('update', $chirp);
 
-        // Validate
+    public function update(Request $request, Chirp $chirp) { 
+        $this->authorize('update', $chirp);
+        
         $validated = $request->validate([
             'message' => 'required|string|max:255',
-        ]);
-        // Update
-        $chirp->update($validated);
-
-        return redirect('/')->with('success', 'Chirp atualizado!');
+       ]);
+       
+       $chirp->update($validated);
+    
+       return redirect('/')->with('success', 'Chirp updated!');
     }
 
     /**
      * Remove the specified resource from storage.
      */
     public function destroy(Chirp $chirp) { 
+
+        $this->authorize('delete', $chirp);
+
         $chirp->delete();
-        return redirect('/')->with('success', 'Chirp apagado!');
+
+        return redirect('/')->with('success', 'Chirp deleted!');
     }
 }
 
